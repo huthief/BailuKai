@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+
+# Candidate analysis output reports (ephemeral)
+*-Candidates.csv
+*-Candidates.txt
+
+# Font binaries (released via Releases, do not track in Git)
+*.ttf
+*.otf
+*.ttc
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
