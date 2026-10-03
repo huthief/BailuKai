@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
 """
-BailuKai - one-click Medium builder for FontForge (Deduplicated)
+BailuKai-90 - one-click Medium builder for FontForge (Pseudo-Vertical -90, Deduplicated)
 
 Key Features:
-1. Root cause resolution for over-thick glyphs (十, 一, 方, 生, 日, 而, 玉, 又, 馬, 見, 面, 金, 高, 老, 士, 心, 血, etc.)
-   and ghosting/spike artifacts on "長":
-   FontForge's font.selection.all() selects by ENCODING SLOT (codepoint), not by glyph.
-   In GuanKiapTsingKhai.ttf (原俠正楷 v1.20, https://github.com/tonyhuan/GuanKiapTsingKhai),
-   285 glyphs are multi-encoded (e.g. both as CJK Unified Ideographs
-   and Kangxi Radicals U+2F00..U+2FD5). font.selection.all() selected these glyphs multiple times,
-   causing FontForge's C-level changeWeight() to execute TWICE (+24 instead of +12).
-   This caused:
-     - 285 glyphs to be 15%~20% heavier than the rest of the font.
-     - "長" to develop self-intersecting loops and stray spike whiskers (虛影) under the bottom stroke.
-   In this builder, selection is strictly deduplicated by unique glyphname, guaranteeing each glyph
-   undergoes changeWeight() EXACTLY ONCE.
-2. Verified that with deduplicated changeWeight(12), all 17 flagged characters and "長"
-   measurably and visually match LXGWWenKaiTC-Medium to within 0% ~ 1.5%.
-3. Maintained pristine reference injection for fragile glyphs ("傳", "導", "育").
+1. Built specifically for pseudo-vertical fonts (-90 suffix):
+   In GuanKiapTsingKhai-90.ttf (原俠正楷-90 v1.20, https://github.com/tonyhuan/GuanKiapTsingKhai),
+   CJK glyphs are rotated 90 degrees counter-clockwise around the em-box center (500, 380)
+   (affine transform: x' = -y + 880, y' = x - 120), so that horizontal text flow displays
+   as vertically upright on e-readers and rotated viewports.
+2. Deduplicated changeWeight(12):
+   Strictly deduplicated by unique glyphname, preventing multi-encoded glyphs (e.g. Kangxi radicals)
+   from undergoing multiple changeWeight passes, matching LXGWWenKaiTC-Medium (+6 stroke expansion).
+3. Rotated Reference Injection for Fragile Glyphs:
+   Fragile glyphs ("傳", "導", "育") are protected from destructive FontForge contour expansion
+   math. Clean contours from LXGWWenKaiTC-Medium are injected and automatically transformed via
+   PostScript matrix (0, 1, -1, 0, 880, -120) with metrics adjusted (width=1000, vwidth=1120)
+   to achieve seamless pseudo-vertical alignment.
+4. User-Specified Metadata:
+   - Copyright: Copyright 2026 huthief (https://github.com/huthief/BailuKai)
+   - Vendor URL & Designer URL: https://github.com/huthief/BailuKai
+   - UniqueID: BailuKai Medium; Version 20260928
+   - Family Name: BailuKai-90 (白鷺楷-90)
+   - SubFamily: Medium
+   - Full Name: BailuKai-90 Medium (白鷺楷-90 Medium)
+   - PostScript Name: BailuKai-90-Medium
+   - OS/2 Weight Class: 500 (Medium)
 """
 
 import fontforge
@@ -32,12 +39,12 @@ import traceback
 
 DEFAULT_WEIGHT = 12  # FontForge changeWeight(12) = +6 contour expansion, perfectly matching LXGWWenKaiTC-Medium
 
-FAMILY_NAME = "BailuKai"
+FAMILY_NAME = "BailuKai-90"
 SUBFAMILY_NAME = "Medium"
-FULL_NAME = "BailuKai Medium"
-POSTSCRIPT_NAME = "BailuKai-Medium"
-CHINESE_FAMILY_NAME = "白鷺楷"
-CHINESE_FULL_NAME = "白鷺楷 Medium"
+FULL_NAME = "BailuKai-90 Medium"
+POSTSCRIPT_NAME = "BailuKai-90-Medium"
+CHINESE_FAMILY_NAME = "白鷺楷-90"
+CHINESE_FULL_NAME = "白鷺楷-90 Medium"
 
 COPYRIGHT = "Copyright 2026 huthief (https://github.com/huthief/BailuKai)"
 VENDOR_URL = "https://github.com/huthief/BailuKai"
@@ -45,9 +52,9 @@ DESIGNER_URL = "https://github.com/huthief/BailuKai"
 UNIQUE_ID = "BailuKai Medium; Version 20260928"
 VERSION = "Version 20260928"
 
-OUTPUT_TTF = "BailuKai-Medium.ttf"
-REPORT_CSV = "BailuKai-Medium-Candidates.csv"
-REPORT_TXT = "BailuKai-Medium-Candidates.txt"
+OUTPUT_TTF = "BailuKai-Medium-90.ttf"
+REPORT_CSV = "BailuKai-Medium-90-Candidates.csv"
+REPORT_TXT = "BailuKai-Medium-90-Candidates.txt"
 
 # Optional fine-tuning dictionary (clean baseline)
 OPTICAL_CORRECTIONS = {}
@@ -58,6 +65,16 @@ FRAGILE_GLYPHS = {
     "導",
     "育",
 }
+
+# Pseudo-vertical rotation transform matrix:
+# 90 degrees counter-clockwise around em center (500, 380):
+# x' = -y + 880
+# y' = x - 120
+# FontForge psMat tuple: (xx, yx, xy, yy, x0, y0)
+# [x', y'] = [x, y] * [[xx, yx], [xy, yy]] + [x0, y0]
+# x' = xx*x + xy*y + x0 -> xx=0, xy=-1, x0=880
+# y' = yx*x + yy*y + y0 -> yx=1, yy=0, y0=-120
+ROTATE_90_CCW_MAT = (0, 1, -1, 0, 880, -120)
 
 # Candidate scoring reference set
 SIMPLE_GLYPHS = set(
@@ -202,15 +219,20 @@ def score_candidate(old, new):
     elif area_growth >= 2:
         score += 5
 
-    if width_growth >= 3:
+    # In -90 pseudo-vertical font, horizontal and vertical stroke orientations are rotated 90 degrees.
+    # We assess both dimensions symmetrically.
+    max_dim = max(width_growth, height_growth)
+    min_dim = min(width_growth, height_growth)
+
+    if max_dim >= 3:
         score += 8
-        reasons.append("wide expansion")
-    elif width_growth >= 1.5:
+        reasons.append("stroke-axis expansion")
+    elif max_dim >= 1.5:
         score += 4
 
-    if height_growth >= 3:
+    if min_dim >= 3:
         score += 5
-        reasons.append("height expansion")
+        reasons.append("dual-axis expansion")
 
     ch = new["char"]
     if ch in SIMPLE_GLYPHS:
@@ -265,11 +287,12 @@ def write_reports(results, csv_path, txt_path, weight_val):
         counts[row["level"]] += 1
 
     with open(txt_path, "w", encoding="utf-8") as f:
-        f.write("BailuKai Medium Candidate Report (Deduplicated)\n")
+        f.write("BailuKai-90 Medium Candidate Report (Pseudo-Vertical -90, Deduplicated)\n")
         f.write("============================================================\n\n")
+        f.write(f"Target font: BailuKai-90.ttf (pseudo-vertical -90 layout)\n")
         f.write(f"Global transformation: +{weight_val} CJK (stroke expansion +{weight_val/2:.1f}, aligned with LXGWWenKaiTC-Medium)\n")
         f.write("Deduplication: Enabled (guarantees each unique glyph is emboldened exactly once)\n")
-        f.write("Protected glyphs (injected from reference): " + ", ".join(sorted(FRAGILE_GLYPHS)) + "\n\n")
+        f.write("Protected glyphs (injected from reference with -90 transform): " + ", ".join(sorted(FRAGILE_GLYPHS)) + "\n\n")
         f.write("Level summary:\n")
         f.write("  A High risk   : {}\n".format(counts["A"]))
         f.write("  B Medium risk : {}\n".format(counts["B"]))
@@ -302,25 +325,23 @@ def write_reports(results, csv_path, txt_path, weight_val):
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Resolve input file: command line arg or default to reference/GuanKiapTsingKhai.ttf
+    # Resolve input file: command line arg or default to reference/GuanKiapTsingKhai-90.ttf
     if len(sys.argv) >= 2:
         input_file = os.path.abspath(sys.argv[1])
     else:
         default_candidates = [
-            os.path.join(script_dir, "reference", "GuanKiapTsingKhai.ttf"),
-            os.path.join(script_dir, "reference", "原俠正楷GuanKiapTsingKhai.ttf"),
+            os.path.join(script_dir, "reference", "GuanKiapTsingKhai-90.ttf"),
+            os.path.join(script_dir, "reference", "原俠正楷GuanKiapTsingKhai-90.ttf"),
         ]
         input_file = next((f for f in default_candidates if os.path.isfile(f)), None)
         if not input_file:
             print("Usage:")
-            print("  fontforge -lang=py -script BailuKai_build_medium.py [INPUT.ttf] [WEIGHT]")
+            print("  fontforge -lang=py -script BailuKai_build_medium-90.py [INPUT.ttf] [WEIGHT]")
             print("")
             print("ERROR: No input file specified and default base font not found at:")
             print("  ", default_candidates[0])
             print("")
-            print("Please download 'GuanKiapTsingKhai.ttf' (原俠正楷 v1.20) from:")
-            print("  https://github.com/tonyhuan/GuanKiapTsingKhai")
-            print("and place it into the 'reference/' directory as described in README.md.")
+            print("Please place 'GuanKiapTsingKhai-90.ttf' (原俠正楷-90 v1.20) into the 'reference/' directory.")
             return 2
 
     if not os.path.isfile(input_file):
@@ -347,7 +368,7 @@ def main():
     report_txt = os.path.join(out_dir, REPORT_TXT)
 
     print("=" * 60)
-    print("BailuKai One-Click Medium Builder (Deduplicated)")
+    print("BailuKai-90 One-Click Medium Builder (Pseudo-Vertical, Deduplicated)")
     print("=" * 60)
     print("Input :", input_file)
     print("Output:", output_ttf)
@@ -390,7 +411,7 @@ def main():
         print(f"      Selected {len(seen_glyphs) - len(fragile_glyphnames)} unique glyphs for changeWeight")
         font.changeWeight(weight_val, "CJK", 0, 0, "auto")
 
-        # 2b. Inject pristine reference Medium contours for fragile glyphs
+        # 2b. Inject pristine reference Medium contours for fragile glyphs with -90 rotation
         search_dirs = [
             os.path.join(script_dir, "reference"),
             os.path.join(os.getcwd(), "reference"),
@@ -405,6 +426,16 @@ def main():
         if ref_font_path:
             print(f"      Injecting clean Medium contours from reference: {os.path.basename(ref_font_path)}")
             ref_font = fontforge.open(ref_font_path)
+
+            # Determine if reference font is horizontal (needs -90 rotation)
+            needs_rotate = False
+            if ord('一') in ref_font:
+                b = ref_font[ord('一')].boundingBox()
+                w = b[2] - b[0]
+                h = b[3] - b[1]
+                if w > h:
+                    needs_rotate = True
+
             for ch in FRAGILE_GLYPHS:
                 cp = ord(ch)
                 if cp in ref_font and cp in font:
@@ -412,7 +443,14 @@ def main():
                     ref_font.copy()
                     font.selection.select(cp)
                     font.paste()
-                    print(f"      Successfully injected clean Medium '{ch}' (U+{cp:04X})")
+
+                    if needs_rotate:
+                        font[cp].transform(ROTATE_90_CCW_MAT)
+                        font[cp].width = 1000
+                        font[cp].vwidth = 1120
+                        print(f"      Successfully injected and rotated clean Medium '{ch}' (U+{cp:04X}) to -90")
+                    else:
+                        print(f"      Successfully injected clean Medium '{ch}' (U+{cp:04X})")
                 else:
                     print(f"      WARNING: '{ch}' (U+{cp:04X}) not found in reference font")
             ref_font.close()

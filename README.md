@@ -11,7 +11,9 @@
 本專案之建置成果字型檔採 **Release 發行版** 方式提供下載，Git 儲存庫中不收錄任何 `.ttf` 二進位字型檔：
 
 - **Release 版本標籤**：[`20260928`](https://git.jigong.org/huthief/BailuKai/releases/tag/20260928)
-- **發行檔案**：`BailuKai-Medium.ttf`
+- **發行檔案**：
+  - `BailuKai-Medium.ttf`：標準橫排中黑字型。
+  - `BailuKai-Medium-90.ttf`：偽直排中黑字型（專為電子書閱讀器直排閱覽設計）。
 
 ---
 
@@ -39,7 +41,11 @@
   - **Level A（高風險）**：強烈膨脹或異常擴張字元。
   - **Level B / C（中低風險）**：微調或常態筆畫增厚字元。
   - **Level D（常態）**：正常轉換字元。
-- 自動產出 `BailuKai-Medium-Candidates.csv` 與 `BailuKai-Medium-Candidates.txt` 以供進一步審閱校對。
+- 自動產出候選字品質分析報表（`.csv` 與 `.txt`）以供進一步審閱校對。
+
+### 4. 偽直排字型支援與幾何旋轉對齊（Pseudo-Vertical -90 Support）
+- **電子書直排適配**：專為電子書閱讀器（如 Kobo、Boox、Kindle 等軟硬體）設計，解決系統原生直排字型不全或不支援原生直排標籤之排版需求。所有 CJK 字符均圍繞字身中心逆時針旋轉 90 度（仿射變換：$x' = -y + 880,\; y' = x - 120$）。
+- **脆弱字形自動旋轉注入**：針對易碎字元（「傳」、「導」、「育」），腳本自參考字型（霞鶩文楷 Medium）複製後，自動施加 PostScript 變換矩陣 `(0, 1, -1, 0, 880, -120)` 並校正度量寬高（`width=1000, vwidth=1120`），確保在直排環境下完全對齊、毫無破綻。
 
 ---
 
@@ -47,11 +53,12 @@
 
 ```text
 BailuKai/
-├── BailuKai_build_medium.py   # FontForge 自動化建置腳本
-├── reference/                 # 參考與來源底本字型放置目錄（不存放實際字型檔）
+├── BailuKai_build_medium.py      # 標準版 FontForge 自動化建置腳本
+├── BailuKai_build_medium-90.py   # 偽直排（-90）FontForge 自動化建置腳本
+├── reference/                    # 參考與來源底本字型放置目錄（不存放實際字型檔）
 │   └── .gitkeep
-├── .gitignore                 # Git 忽略設定（過濾 *.ttf 等字型檔）
-└── README.md                  # 專案說明文件
+├── .gitignore                    # Git 忽略設定（過濾 *.ttf 等字型檔）
+└── README.md                     # 專案說明文件
 ```
 
 ---
@@ -62,7 +69,8 @@ BailuKai/
 
 | 角色 | 字型名稱與版本 | 下載來源 | 放置檔名規則 |
 | :--- | :--- | :--- | :--- |
-| **基底字型** | **原俠正楷 (v1.20)** | [GitHub: tonyhuan/GuanKiapTsingKhai](https://github.com/tonyhuan/GuanKiapTsingKhai) (請於 Release 下載 `GuanKiapTsingKhai.ttf`) | `reference/GuanKiapTsingKhai.ttf` |
+| **標準版基底字型** | **原俠正楷 (v1.20)** | [GitHub: tonyhuan/GuanKiapTsingKhai](https://github.com/tonyhuan/GuanKiapTsingKhai) (請於 Release 下載 `GuanKiapTsingKhai.ttf`) | `reference/GuanKiapTsingKhai.ttf`<br>*(或 `reference/原俠正楷GuanKiapTsingKhai.ttf`)* |
+| **偽直排基底字型** | **原俠正楷-90 (v1.20)** | [GitHub: tonyhuan/GuanKiapTsingKhai](https://github.com/tonyhuan/GuanKiapTsingKhai) (請於 Release 下載 `GuanKiapTsingKhai-90.ttf`) | `reference/GuanKiapTsingKhai-90.ttf`<br>*(或 `reference/原俠正楷GuanKiapTsingKhai-90.ttf`)* |
 | **參考注入字型** | **霞鶩文楷 TC (Medium)** | [GitHub: lxgw/lxgwwenkaitc](https://github.com/lxgw/lxgwwenkaitc) (請下載 Medium 字重 TTF) | `reference/霞鶩文楷LXGWWenKaiTC-Medium.ttf`<br>*(或 `reference/LXGWWenKaiTC-Medium.ttf`)* |
 
 ---
@@ -73,38 +81,44 @@ BailuKai/
 - [FontForge](https://fontforge.org/)（需支援 Python 擴充腳本功能）
 - Python 3.x（通常隨 FontForge 安裝提供）
 
-### 一鍵建置
-完成「參考用字型檔準備」後，在專案根目錄下直接執行：
+### 1. 標準版建置 (BailuKai-Medium.ttf)
+完成參考字型準備後，在專案根目錄下執行：
 
 ```bash
 fontforge -lang=py -script BailuKai_build_medium.py
 ```
 
-> **提示**：未指定參數時，腳本將自動以 `reference/GuanKiapTsingKhai.ttf` 為基底來源輸入，並於 `reference/` 尋找霞鶩文楷進行修復注入，最終產生的 `BailuKai-Medium.ttf` 會輸出至專案根目錄。
+> **提示**：未指定參數時，腳本將自動以 `reference/GuanKiapTsingKhai.ttf` 為基底來源輸入，並於 `reference/` 尋找霞鶩文楷進行修復注入，最終產生的 `BailuKai-Medium.ttf` 會輸出至專案根目錄。亦可透過參數手動指定輸入路徑或加粗權重：
+> ```bash
+> fontforge -lang=py -script BailuKai_build_medium.py [輸入字型.ttf] [加粗權重(預設12)]
+> ```
 
-### 自訂參數建置
-若需手動指定輸入檔案路徑或加粗權重：
+### 2. 偽直排版建置 (BailuKai-Medium-90.ttf)
+完成參考字型準備後，在專案根目錄下執行：
 
 ```bash
-fontforge -lang=py -script BailuKai_build_medium.py [輸入字型.ttf] [加粗權重(預設12)]
+fontforge -lang=py -script BailuKai_build_medium-90.py
 ```
 
-範例：
-```bash
-fontforge -lang=py -script BailuKai_build_medium.py reference/GuanKiapTsingKhai.ttf 12
-```
+> **提示**：未指定參數時，腳本將自動以 `reference/GuanKiapTsingKhai-90.ttf`（或 `reference/原俠正楷GuanKiapTsingKhai-90.ttf`）為基底來源輸入，自動處理易碎字符旋轉注入與各項直排度量，最終產生的 `BailuKai-Medium-90.ttf`、`BailuKai-Medium-90-Candidates.csv` 與 `BailuKai-Medium-90-Candidates.txt` 會輸出至專案根目錄。亦可手動指定輸入檔案：
+> ```bash
+> fontforge -lang=py -script BailuKai_build_medium-90.py [輸入字型.ttf] [加粗權重(預設12)]
+> ```
 
 ---
 
 ## 字型元資料 (Font Metadata)
 
-| 欄位 (Property) | 設定值 (Value) |
-| :--- | :--- |
-| **Family Name** | `BailuKai` |
-| **SubFamily** | `Medium` |
-| **Full Name** | `BailuKai Medium` |
-| **PostScript Name** | `BailuKai-Medium` |
-| **OS/2 Weight Class** | `500` (Medium) |
+| 欄位 (Property) | 標準版 (BailuKai-Medium.ttf) | 偽直排版 (BailuKai-Medium-90.ttf) |
+| :--- | :--- | :--- |
+| **Family Name** | `BailuKai`（繁中：`白鷺楷`） | `BailuKai-90`（繁中：`白鷺楷-90`） |
+| **SubFamily** | `Medium` | `Medium` |
+| **Full Name** | `BailuKai Medium`（繁中：`白鷺楷 Medium`） | `BailuKai-90 Medium`（繁中：`白鷺楷-90 Medium`） |
+| **PostScript Name** | `BailuKai-Medium` | `BailuKai-90-Medium` |
+| **OS/2 Weight Class** | `500` (Medium) | `500` (Medium) |
+| **UniqueID** | `BailuKai Medium; Version 20260928` | `BailuKai Medium; Version 20260928` |
+| **Copyright** | `Copyright 2026 huthief (https://github.com/huthief/BailuKai)` | `Copyright 2026 huthief (https://github.com/huthief/BailuKai)` |
+| **Vendor / Designer URL** | `https://github.com/huthief/BailuKai` | `https://github.com/huthief/BailuKai` |
 
 ---
 
