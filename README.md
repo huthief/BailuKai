@@ -234,3 +234,9 @@ fontforge -lang=py -script BailuKai_build_medium_all.py TW-90 12
 3. **白鷺楷 (BailuKai)**
    - 本專案自動化建置腳本及說明文件依據開源社群條款釋出。
    - 衍生字型保留各上游開源字型之授權條款要求。
+
+## 授權
+
+本字型以 SIL Open Font License 1.1 釋出，全文見 `OFL.txt`。
+衍生自原俠正楷 v1.20（Tony Huang，OFL 1.1）。
+部分易碎字形的輪廓參考霞鶩文楷 Medium（LXGW WenKai，OFL 1.1）。
