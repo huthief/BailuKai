@@ -54,8 +54,8 @@ VENDOR_URL = "https://github.com/huthief/BailuKai"
 DESIGNER_URL = "https://github.com/huthief/BailuKai"
 LICENSE = "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
 LICENSE_URL = "https://scripts.sil.org/OFL"
-UNIQUE_ID = "BailuKai-S-90 Medium; Version 20260928"
-VERSION = "Version 20260928"
+UNIQUE_ID = "BailuKai-S-90 Medium; Version 202610100"
+VERSION = "Version 202610100"
 
 OUTPUT_TTF = "BailuKai-Medium-S-90.ttf"
 REPORT_CSV = "BailuKai-Medium-S-90-Candidates.csv"
@@ -69,6 +69,7 @@ FRAGILE_GLYPHS = {
     "傳",
     "導",
     "育",
+    "帳",
 }
 
 # Pseudo-vertical rotation transform matrix:
@@ -478,6 +479,10 @@ def build(input_file=None, weight_val=DEFAULT_WEIGHT, out_dir=None):
             font.os2_weight = 500
         except Exception:
             pass
+        try:
+            font.os2_vendor = "huth"
+        except Exception:
+            pass
 
         # Update all localization name records in sfnt_names table
         try:
@@ -507,6 +512,8 @@ def build(input_file=None, weight_val=DEFAULT_WEIGHT, out_dir=None):
                     new_sfnt.append((lang, name, UNIQUE_ID))
                 elif name == "Copyright":
                     new_sfnt.append((lang, name, COPYRIGHT))
+                elif name == "Manufacturer":
+                    new_sfnt.append((lang, name, "huthief"))
                 elif name == "Vendor URL":
                     new_sfnt.append((lang, name, VENDOR_URL))
                 elif name == "Designer URL":
@@ -523,6 +530,7 @@ def build(input_file=None, weight_val=DEFAULT_WEIGHT, out_dir=None):
             # Ensure critical keys exist for English (US) and Chinese locales
             critical_keys = [
                 ("English (US)", "Copyright", COPYRIGHT),
+                ("English (US)", "Manufacturer", "huthief"),
                 ("English (US)", "Vendor URL", VENDOR_URL),
                 ("English (US)", "Designer URL", DESIGNER_URL),
                 ("English (US)", "License", LICENSE),

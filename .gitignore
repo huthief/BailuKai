@@ -19,3 +19,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Error captures and issue reports
+error/

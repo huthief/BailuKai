@@ -49,8 +49,8 @@ CHINESE_FULL_NAME = "白鷺楷-90 Medium"
 COPYRIGHT = "Copyright 2026 huthief (https://github.com/huthief/BailuKai)"
 VENDOR_URL = "https://github.com/huthief/BailuKai"
 DESIGNER_URL = "https://github.com/huthief/BailuKai"
-UNIQUE_ID = "BailuKai Medium; Version 20260928"
-VERSION = "Version 20260928"
+UNIQUE_ID = "BailuKai-90 Medium; Version 202610100"
+VERSION = "Version 202610100"
 
 OUTPUT_TTF = "BailuKai-Medium-90.ttf"
 REPORT_CSV = "BailuKai-Medium-90-Candidates.csv"
@@ -64,6 +64,7 @@ FRAGILE_GLYPHS = {
     "傳",
     "導",
     "育",
+    "帳",
 }
 
 # Pseudo-vertical rotation transform matrix:
@@ -487,6 +488,10 @@ def main():
             font.os2_weight = 500
         except Exception:
             pass
+        try:
+            font.os2_vendor = "huth"
+        except Exception:
+            pass
 
         # Update all localization name records in sfnt_names table
         try:
@@ -512,6 +517,8 @@ def main():
                     new_sfnt.append((lang, name, UNIQUE_ID))
                 elif name == "Copyright":
                     new_sfnt.append((lang, name, COPYRIGHT))
+                elif name == "Manufacturer":
+                    new_sfnt.append((lang, name, "huthief"))
                 elif name == "Vendor URL":
                     new_sfnt.append((lang, name, VENDOR_URL))
                 elif name == "Designer URL":
@@ -524,6 +531,7 @@ def main():
             # Ensure critical keys exist for English (US)
             critical_keys = [
                 ("English (US)", "Copyright", COPYRIGHT),
+                ("English (US)", "Manufacturer", "huthief"),
                 ("English (US)", "Vendor URL", VENDOR_URL),
                 ("English (US)", "Designer URL", DESIGNER_URL),
                 ("English (US)", "UniqueID", UNIQUE_ID),

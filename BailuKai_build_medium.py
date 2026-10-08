@@ -17,7 +17,7 @@ Key Features:
    undergoes changeWeight() EXACTLY ONCE.
 2. Verified that with deduplicated changeWeight(12), all 17 flagged characters and "長"
    measurably and visually match LXGWWenKaiTC-Medium to within 0% ~ 1.5%.
-3. Maintained pristine reference injection for fragile glyphs ("傳", "導", "育").
+3. Maintained pristine reference injection for fragile glyphs ("傳", "導", "育", "帳").
 """
 
 import fontforge
@@ -42,8 +42,8 @@ CHINESE_FULL_NAME = "白鷺楷 Medium"
 COPYRIGHT = "Copyright 2026 huthief (https://github.com/huthief/BailuKai)"
 VENDOR_URL = "https://github.com/huthief/BailuKai"
 DESIGNER_URL = "https://github.com/huthief/BailuKai"
-UNIQUE_ID = "BailuKai Medium; Version 20260928"
-VERSION = "Version 20260928"
+UNIQUE_ID = "BailuKai Medium; Version 202610100"
+VERSION = "Version 202610100"
 
 OUTPUT_TTF = "BailuKai-Medium.ttf"
 REPORT_CSV = "BailuKai-Medium-Candidates.csv"
@@ -57,6 +57,7 @@ FRAGILE_GLYPHS = {
     "傳",
     "導",
     "育",
+    "帳",
 }
 
 # Candidate scoring reference set
@@ -408,10 +409,13 @@ def main():
             for ch in FRAGILE_GLYPHS:
                 cp = ord(ch)
                 if cp in ref_font and cp in font:
+                    orig_vwidth = font[cp].vwidth
                     ref_font.selection.select(cp)
                     ref_font.copy()
                     font.selection.select(cp)
                     font.paste()
+                    if orig_vwidth is not None and orig_vwidth > 0:
+                        font[cp].vwidth = orig_vwidth
                     print(f"      Successfully injected clean Medium '{ch}' (U+{cp:04X})")
                 else:
                     print(f"      WARNING: '{ch}' (U+{cp:04X}) not found in reference font")
@@ -449,6 +453,10 @@ def main():
             font.os2_weight = 500
         except Exception:
             pass
+        try:
+            font.os2_vendor = "huth"
+        except Exception:
+            pass
 
         # Update all localization name records in sfnt_names table
         try:
@@ -474,6 +482,8 @@ def main():
                     new_sfnt.append((lang, name, UNIQUE_ID))
                 elif name == "Copyright":
                     new_sfnt.append((lang, name, COPYRIGHT))
+                elif name == "Manufacturer":
+                    new_sfnt.append((lang, name, "huthief"))
                 elif name == "Vendor URL":
                     new_sfnt.append((lang, name, VENDOR_URL))
                 elif name == "Designer URL":
@@ -486,6 +496,7 @@ def main():
             # Ensure critical keys exist for English (US)
             critical_keys = [
                 ("English (US)", "Copyright", COPYRIGHT),
+                ("English (US)", "Manufacturer", "huthief"),
                 ("English (US)", "Vendor URL", VENDOR_URL),
                 ("English (US)", "Designer URL", DESIGNER_URL),
                 ("English (US)", "UniqueID", UNIQUE_ID),
