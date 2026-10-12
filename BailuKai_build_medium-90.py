@@ -49,8 +49,8 @@ CHINESE_FULL_NAME = "白鷺楷-90 Medium"
 COPYRIGHT = "Copyright 2026 huthief (https://github.com/huthief/BailuKai)"
 VENDOR_URL = "https://github.com/huthief/BailuKai"
 DESIGNER_URL = "https://github.com/huthief/BailuKai"
-UNIQUE_ID = "BailuKai-90 Medium; Version 202610100"
-VERSION = "Version 202610100"
+UNIQUE_ID = "BailuKai-90 Medium; Version 202610120"
+VERSION = "Version 202610120"
 
 OUTPUT_TTF = "BailuKai-Medium-90.ttf"
 REPORT_CSV = "BailuKai-Medium-90-Candidates.csv"
@@ -65,6 +65,10 @@ FRAGILE_GLYPHS = {
     "導",
     "育",
     "帳",
+    "繁",
+    "熱",
+    "聯",
+    "鬢",
 }
 
 # Pseudo-vertical rotation transform matrix:

@@ -53,8 +53,8 @@ VENDOR_URL = "https://github.com/huthief/BailuKai"
 DESIGNER_URL = "https://github.com/huthief/BailuKai"
 LICENSE = "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
 LICENSE_URL = "https://scripts.sil.org/OFL"
-UNIQUE_ID = "BailuKai-W Medium; Version 202610100"
-VERSION = "Version 202610100"
+UNIQUE_ID = "BailuKai-W Medium; Version 202610120"
+VERSION = "Version 202610120"
 
 OUTPUT_TTF = "BailuKai-Medium-W.ttf"
 REPORT_CSV = "BailuKai-Medium-W-Candidates.csv"
@@ -69,6 +69,10 @@ FRAGILE_GLYPHS = {
     "導",
     "育",
     "帳",
+    "繁",
+    "熱",
+    "聯",
+    "鬢",
 }
 
 # Candidate scoring reference set
@@ -411,11 +415,14 @@ def build(input_file=None, weight_val=DEFAULT_WEIGHT, out_dir=None):
             for ch in FRAGILE_GLYPHS:
                 cp = ord(ch)
                 if cp in ref_font and cp in font:
+                    orig_width = font[cp].width
                     orig_vwidth = font[cp].vwidth
                     ref_font.selection.select(cp)
                     ref_font.copy()
                     font.selection.select(cp)
                     font.paste()
+                    if orig_width is not None and orig_width > 0:
+                        font[cp].width = orig_width
                     if orig_vwidth is not None and orig_vwidth > 0:
                         font[cp].vwidth = orig_vwidth
                     print(f"      Successfully injected clean Medium '{ch}' (U+{cp:04X})")

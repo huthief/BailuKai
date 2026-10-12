@@ -54,8 +54,8 @@ VENDOR_URL = "https://github.com/huthief/BailuKai"
 DESIGNER_URL = "https://github.com/huthief/BailuKai"
 LICENSE = "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
 LICENSE_URL = "https://scripts.sil.org/OFL"
-UNIQUE_ID = "BailuKai-S-90 Medium; Version 202610100"
-VERSION = "Version 202610100"
+UNIQUE_ID = "BailuKai-S-90 Medium; Version 202610120"
+VERSION = "Version 202610120"
 
 OUTPUT_TTF = "BailuKai-Medium-S-90.ttf"
 REPORT_CSV = "BailuKai-Medium-S-90-Candidates.csv"
@@ -70,6 +70,10 @@ FRAGILE_GLYPHS = {
     "導",
     "育",
     "帳",
+    "繁",
+    "熱",
+    "聯",
+    "鬢",
 }
 
 # Pseudo-vertical rotation transform matrix:
